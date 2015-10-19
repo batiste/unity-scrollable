@@ -8,45 +8,77 @@ using System.Collections.Generic;
 [RequireComponent(typeof(MeshCollider))]
 public class TileMap : MonoBehaviour {
 	
-	public int size_x;
-	public int size_y;
+	private int size_x;
+	private int size_y;
 	public float tileSize = 1.0f;
 
 	public Texture2D terrainTiles;
 	public int tileResolution;
 
 	private Vector3 center;
-	private Vector3 pos = new Vector3(0, 0, 0);
+	public Vector3 pos = new Vector3(0, 0, 0);
 	Rect[] tiles;
 
 	private MeshFilter mesh_filter;
 	private Vector3 mesh_trans = new Vector3(0, 0, 0); 
 
 	void Awake() {
-		Debug.Log ("Awake");
-		Application.targetFrameRate = 5;
+		Debug.Log ("TileMap Awake");
+		Application.targetFrameRate = 30;
 	}
 
 	// Use this for initialization
 	void Start () {
 		mesh_filter = GetComponent<MeshFilter>();
 		tiles = GetTiles();
+		// This is half of the vertical size of the viewing volume. 
+		// Horizontal viewing size varies depending on viewport's aspect ratio. 
+		Debug.Log ("Camera.main.orthographicSize : " + Camera.main.orthographicSize);
+		Debug.Log ("Screen.height : " + Screen.height);
 		float ratio = 2 * Camera.main.orthographicSize / Screen.height;
-		float wratio = ratio * Camera.main.aspect;
-		size_x = (int)(2 + (wratio * Screen.width / tileSize));
-		size_y = (int)(2 + (ratio * Screen.height / tileSize));
+		Debug.Log ("Ratio : " + ratio);
+
+		size_y = (int)(2 + (ratio * Camera.main.pixelHeight / tileSize));
+		size_x = (int)(3 + (ratio * Camera.main.pixelWidth / tileSize));
+
+		Debug.Log ("Camera.main.aspect : " + Camera.main.aspect);
+		Debug.Log ("size_y : " + size_y);
+		Debug.Log ("size_x : " + size_x);
+
 		BuildMesh();
 		center = new Vector3(-tileSize * size_x / 2, -tileSize * size_y / 2, 0);
 		center = center + new Vector3(-tileSize, -0, 0);
 		transform.position = pos + center;
+
+		Debug.Log (mod (3, 3));
+		Debug.Log(mod(2, 3));
+		Debug.Log (mod (1, 3));
+		Debug.Log (mod (0, 3));
+		Debug.Log(mod(-1, 3));
+		Debug.Log(mod(-2, 3));
+		Debug.Log(mod(-3, 3));
+		Debug.Log(mod(-4, 3));
+
+	}
+
+	float mod(float x, float m) {
+		//int ;
+		//if (x < 0) {
+		//	x = System.Math.Abs(x) + m;
+		//}
+		float mod = x % m;
+		if (mod < 0) {
+			return m + mod;
+		}
+		return mod;
 	}
 
 	void Update () {
-		pos.x += 1;
-		pos.y += 1;
+		//pos.x += 0.1f;
+		//pos.y += 0.1f;
 		Vector3 trans = new Vector3(
-			pos.x % tileSize, 
-			pos.y % tileSize, 0);
+		    mod(pos.x, tileSize), 
+		    mod(pos.y, tileSize), 0);
 		transform.position = trans + center;
 		if (trans != mesh_trans) {
 			UVMapping ();
@@ -75,7 +107,7 @@ public class TileMap : MonoBehaviour {
 	}
 
 	public Rect GetTile(int x, int y) {
-		int index = Mathf.Abs(x + y) % tiles.Length;
+		int index = (int)mod(Mathf.Abs(x) * 7 + Mathf.Abs(y) * 5, tiles.Length);
 		return tiles[index];
 	}
 
