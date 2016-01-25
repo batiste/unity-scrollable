@@ -38,8 +38,8 @@ public class TileMap : MonoBehaviour {
 		float ratio = 2 * Camera.main.orthographicSize / Screen.height;
 		Debug.Log ("Ratio : " + ratio);
 
-		size_y = (int)(2 + (ratio * Camera.main.pixelHeight / tileSize));
-		size_x = (int)(3 + (ratio * Camera.main.pixelWidth / tileSize));
+		size_y = (int)((ratio * Camera.main.pixelHeight / tileSize));
+		size_x = (int)((ratio * Camera.main.pixelWidth / tileSize));
 
 		Debug.Log ("Camera.main.aspect : " + Camera.main.aspect);
 		Debug.Log ("size_y : " + size_y);
@@ -50,39 +50,45 @@ public class TileMap : MonoBehaviour {
 		center = center + new Vector3(-tileSize, -0, 0);
 		transform.position = pos + center;
 
-		Debug.Log (mod (3, 3));
-		Debug.Log(mod(2, 3));
-		Debug.Log (mod (1, 3));
-		Debug.Log (mod (0, 3));
-		Debug.Log(mod(-1, 3));
-		Debug.Log(mod(-2, 3));
-		Debug.Log(mod(-3, 3));
-		Debug.Log(mod(-4, 3));
+		//Debug.Log(mod(1.6f, 3));
+		//Debug.Log(mod(1.3f, 3));
+		//Debug.Log(mod(0, 3));
+		//Debug.Log(mod(-1.3f, 3));
+		//Debug.Log(mod(-2.6f, 3));
 
 	}
 
 	float mod(float x, float m) {
-		//int ;
-		//if (x < 0) {
-		//	x = System.Math.Abs(x) + m;
-		//}
-		float mod = x % m;
-		if (mod < 0) {
-			return m + mod;
+		// -1.2, 1.0 == 0.8
+		// -0.9, 1.0 == 0.1
+		// -0.6, 1.0 == 0.4
+		// -0.3, 1.0 == 0.7
+		// 0.0,  1.0 == 0.0
+		// 0.3. 1.0 == 0.3
+		// 0.6, 1.0 == 0.6
+		// 1.2, 1.0 == 0.2
+
+		float remainder = x % m;
+		if (remainder < 0) {
+			return remainder + m;
 		}
-		return mod;
+		return remainder;
 	}
 
 	void Update () {
 		//pos.x += 0.1f;
 		//pos.y += 0.1f;
+
+
 		Vector3 trans = new Vector3(
 		    mod(pos.x, tileSize), 
 		    mod(pos.y, tileSize), 0);
 		transform.position = trans + center;
-		if (trans != mesh_trans) {
+		//if (trans != mesh_trans) {
 			UVMapping ();
-		}
+		//}
+		// Debug.Log (trans);
+
 		mesh_trans = trans;
 	}
 	
@@ -107,15 +113,32 @@ public class TileMap : MonoBehaviour {
 	}
 
 	public Rect GetTile(int x, int y) {
-		int index = (int)mod(Mathf.Abs(x) * 7 + Mathf.Abs(y) * 5, tiles.Length);
+		int index = (100000 + x) % tiles.Length;
 		return tiles[index];
 	}
 
 	public void UVMapping() {
 		Vector2[] uv = mesh_filter.sharedMesh.uv;
 		int x, y;
-		int x_offset = (int)(((int)pos.x / (int)tileSize));
-		int y_offset = (int)(((int)pos.y / (int)tileSize));
+		// there is a rounding error around 0 so better keeping those values positive
+		int x_offset = (int)Mathf.Floor((pos.x) / tileSize);
+		int y_offset = (int)Mathf.Floor((pos.y / tileSize));
+
+
+		// with tileSize = 2.0f
+		// Debug.Log ("pos.x: " + pos.x + ", x_offset: " +  x_offset);
+		// 1.2, 2, 0.2
+		// 0.9, 1, 0.9
+		// 0.6, 1, 0.6
+		// 0.3, 1, 0.3
+		// 0.0, 0, 0
+		//      ^-- this one should be 1
+		// -0.3, 0, 0.7
+		// -0.6, 0, 0.4
+		// -0.9, 0, 0.1
+		// -1.2, -1, 0.8
+
+		//x_offset = 1;
 		for (y=0; y < size_y; y++) {
 			for (x=0; x < size_x; x++) {
 				int index = (y * size_x + x);
