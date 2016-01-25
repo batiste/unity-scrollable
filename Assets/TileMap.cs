@@ -19,6 +19,9 @@ public class TileMap : MonoBehaviour {
 	public Vector3 pos = new Vector3(0, 0, 0);
 	Rect[] tiles;
 
+	public Dictionary<string, int> tileMapIndex = new Dictionary<string, int> {};
+	System.Random rnd = new System.Random();
+
 	private MeshFilter mesh_filter;
 	private Vector3 mesh_trans = new Vector3(0, 0, 0); 
 
@@ -113,7 +116,12 @@ public class TileMap : MonoBehaviour {
 	}
 
 	public Rect GetTile(int x, int y) {
-		int index = (100000 + x) % tiles.Length;
+		string key = 'c' + x.ToString() + ':' + y.ToString();
+		int index;
+		if(!tileMapIndex.TryGetValue (key, out index)) {
+			index = Random.Range((int)0, (int)tiles.Length - 1);
+			tileMapIndex.Add(key, index);
+		}
 		return tiles[index];
 	}
 
